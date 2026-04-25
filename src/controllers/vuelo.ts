@@ -1,4 +1,4 @@
-import express, {Request, Response} from 'express';
+import {Request, Response} from 'express';
 import { createVuelo, deleteVuelo, getVuelos,getVueloById,updateVuelo } from '../services/vuelo.js';
 
 const createVueloHandler = async (req: Request, res: Response) => {
@@ -12,6 +12,11 @@ const createVueloHandler = async (req: Request, res: Response) => {
 
 const getVuelosHandler = async (req: Request, res: Response) => {
     try {
+        if (req.query.id) {
+            const vuelo = await getVueloById(req.query.id as string);
+            if (!vuelo) return res.status(404).json({ message: 'Vuelo not found' });
+            return res.json(vuelo);
+        }
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         const vuelos = await getVuelos(page, limit);

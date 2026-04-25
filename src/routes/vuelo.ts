@@ -3,10 +3,10 @@ import { createVueloHandler, getVuelosHandler, getVueloByIdHandler, updateVueloH
 
 const router = express.Router();
 
-router.post('/vuelos', createVueloHandler);
-router.get('/vuelos', getVuelosHandler);
-router.get('/vuelos/:id', getVueloByIdHandler);
-router.put('/vuelos/:id', updateVueloHandler);
-router.delete('/vuelos/:id', deleteVueloHandler);
+router.post('/vuelo', createVueloHandler);
+router.get('/vuelo', getVuelosHandler);
+router.get('/vuelo/:id', getVueloByIdHandler);
+router.put('/vuelo/:id', updateVueloHandler);
+router.delete('/vuelo/:id', deleteVueloHandler);
 
 export default router;
