@@ -26,3 +26,17 @@ Para iniciar la API (tsc + cd ./dist + node server.js) o usar:
 npm start
 ```
 
+## Documentación
+Scalar está disponible en:
+```
+http://localhost:Puerto-configurado-dotenv/docs
+```
+
+## Dependencies Principales
+- `dotenv`: Gestión de variables de entorno.
+- `mongodb` i `mongoose`: Base de datos MongoDB.
+- `@scalar/express-api-reference`: Generación de documentación.
+- `express`: Framework para la API.
+
+## Dependencies de Desarrollo
+- `typescript`: Suport per a TypeScript.

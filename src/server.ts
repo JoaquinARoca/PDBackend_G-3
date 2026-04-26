@@ -55,5 +55,7 @@ mongoose
     .catch((error) => console.error('DB Connection Error:', error));
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+  console.log(`DroneApp API listening at http://localhost:${port}`);
+  console.log(`DroneApp API documentation at http://localhost:${port}/docs`);
 });
+
