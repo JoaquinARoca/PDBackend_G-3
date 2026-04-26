@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import vueloRoutes from "./routes/vuelo.js";
+import puntoRoutes from "./routes/punto.js"
 import openApiSpec from "./openapi.js";
 
 
@@ -40,6 +41,7 @@ app.get('/docs', (_req, res) => {
 
 // Rutas Rest
 app.use("/api",vueloRoutes);
+app.use("/api",puntoRoutes);
 
 //Rutas de prueba
 app.get("/", (req,res) => {

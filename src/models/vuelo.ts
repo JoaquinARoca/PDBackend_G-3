@@ -8,7 +8,7 @@ const vueloSchema = new mongoose.Schema({
 export interface IVuelo {
     nametag: string;
     datetime: Date;
-}
+};
 
 const Vuelo = mongoose.model("Vuelo", vueloSchema);
 export default Vuelo;
