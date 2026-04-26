@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import vueloRoutes from "./routes/vuelo.js";
+import openApiSpec from "./openapi.js";
 
 
 dotenv.config({ quiet: true });
@@ -10,6 +11,32 @@ const app = express();
 const port = 3000;
 
 app.use(express.json());
+
+// Docs
+app.get('/openapi.json', (_req, res) => res.json(openApiSpec));
+app.get('/docs', (_req, res) => {
+  res.send(`<!doctype html>
+<html>
+  <head><title>PD G3 API Docs</title><meta charset="utf-8"/></head>
+  <body>
+    <script id="api-reference" data-url="/openapi.json"></script>
+    <script>
+      document.getElementById('api-reference').dataset.configuration = JSON.stringify({
+        layout: 'modern',
+        defaultHttpClient: { targetKey: 'shell', clientKey: 'httpie' },
+        httpSnippet: {
+          clients: [
+            { targetKey: 'shell', clientKey: 'curl' },
+            { targetKey: 'javascript', clientKey: 'fetch' },
+            { targetKey: 'python', clientKey: 'requests' },
+          ]
+        }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+  </body>
+</html>`);
+});
 
 // Rutas Rest
 app.use("/api",vueloRoutes);
