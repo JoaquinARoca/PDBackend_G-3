@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import vueloRoutes from "./routes/vuelo.js";
 import puntoRoutes from "./routes/punto.js"
+import instruccionRoutes from "./routes/instruccion.js"
 import openApiSpec from "./openapi.js";
 
 
@@ -42,6 +43,7 @@ app.get('/docs', (_req, res) => {
 // Rutas Rest
 app.use("/api",vueloRoutes);
 app.use("/api",puntoRoutes);
+app.use("/api",instruccionRoutes);
 
 //Rutas de prueba
 app.get("/", (req,res) => {
