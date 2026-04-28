@@ -12,6 +12,7 @@
     "start": "tsc && node dist/server.js"
   },
   "dependencies": {
+    "bigint-crypto-utils": "^3.3.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mongoose": "^9.5.0"
