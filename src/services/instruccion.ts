@@ -19,7 +19,8 @@ const getInstruccionById = async (id: string) => {
 };
 
 const updateInstruccion = async (id: string, data: Partial<InstruccionInput>) => {
-    if (data.Punto) {
+    const {ID_Vuelo, ...updateData} = data;
+    if (updateData.Punto) {
         const instruccion = await Instruccion.findById(id);
         if (!instruccion) return null;
         await Punto.findByIdAndUpdate(instruccion.Punto, { $set: data.Punto });
