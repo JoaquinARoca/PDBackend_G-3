@@ -37,6 +37,7 @@ http://localhost:Puerto-configurado-dotenv/docs
 - `mongodb` i `mongoose`: Base de datos MongoDB.
 - `@scalar/express-api-reference`: Generación de documentación.
 - `express`: Framework para la API.
+- `bigint-crypto-utils`: Configuraciones de RSA
 
 ## Dependencies de Desarrollo
 - `typescript`: Suport per a TypeScript.
