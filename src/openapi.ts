@@ -24,6 +24,10 @@ const openApiSpec = {
       name: 'Punto',
       description: 'Punto es un modelo de datos que representa una coordenada GPS con altitud y orientación del dron',
     },
+    {
+      name: 'Instruccion',
+      description: 'Instruccion es un modelo de datos que representa una orden de vuelo asociada a un punto GPS y un vuelo. Cada instrucción genera un nuevo trail y puede crear nuevas versiones al ser actualizada',
+    },
   ],
   paths: {
     '/vuelo': {
@@ -363,6 +367,273 @@ const openApiSpec = {
         },
       },
     },
+    '/instruccion': {
+      get: {
+        tags: ['Instruccion'],
+        summary: 'Get all instrucciones or one by query ID',
+        description: 'Si se proporciona el parámetro `id`, devuelve la instrucción con ese ID. Si no, devuelve una lista paginada de todas las instrucciones',
+        parameters: [
+          {
+            name: 'id',
+            in: 'query',
+            schema: { type: 'string' },
+            description: 'ID de la instrucción a obtener (si se proporciona, ignora page y limit)',
+            example: '507f1f77bcf86cd799439011',
+          },
+          {
+            name: 'page',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1 },
+            description: 'Número de página (comienza en 1)',
+            example: 1,
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 100 },
+            description: 'Cantidad de elementos por página',
+            example: 10,
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Instrucción o lista de instrucciones obtenida exitosamente',
+            content: {
+              'application/json': {
+                schema: {
+                  oneOf: [
+                    { $ref: '#/components/schemas/Instruccion' },
+                    { type: 'array', items: { $ref: '#/components/schemas/Instruccion' } },
+                  ],
+                },
+                example: [
+                  {
+                    _id: '507f1f77bcf86cd799439011',
+                    ID_Vuelo: '507f1f77bcf86cd799439020',
+                    version: 1,
+                    trail: 1,
+                    Punto: { _id: '507f1f77bcf86cd799439030', Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
+                    directriz: 'Volar hacia el norte',
+                    datetime: '2024-01-15T10:30:00Z',
+                  },
+                ],
+              },
+            },
+          },
+          404: { description: 'Instrucción no encontrada (cuando se usa el parámetro id)' },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+      post: {
+        tags: ['Instruccion'],
+        summary: 'Create a instruccion',
+        description: 'Crea una nueva instrucción de vuelo. El campo `trail` se asigna automáticamente como el siguiente número secuencial para el vuelo dado',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/InstruccionInput' },
+              example: {
+                ID_Vuelo: '507f1f77bcf86cd799439020',
+                Punto: { Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
+                directriz: 'Volar hacia el norte',
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Instrucción creada exitosamente',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Instruccion' },
+                example: {
+                  _id: '507f1f77bcf86cd799439011',
+                  ID_Vuelo: '507f1f77bcf86cd799439020',
+                  version: 1,
+                  trail: 1,
+                  Punto: { _id: '507f1f77bcf86cd799439030', Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
+                  directriz: 'Volar hacia el norte',
+                  datetime: '2024-01-15T10:30:00Z',
+                },
+              },
+            },
+          },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+    },
+    '/instruccion/{id}': {
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: 'ID único de la instrucción',
+          example: '507f1f77bcf86cd799439011',
+        },
+      ],
+      get: {
+        tags: ['Instruccion'],
+        summary: 'Get a instruccion by ID',
+        description: 'Obtiene los detalles de una instrucción específica por su ID, con el punto GPS populado',
+        responses: {
+          200: {
+            description: 'Instrucción encontrada',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Instruccion' },
+                example: {
+                  _id: '507f1f77bcf86cd799439011',
+                  ID_Vuelo: '507f1f77bcf86cd799439020',
+                  version: 1,
+                  trail: 1,
+                  Punto: { _id: '507f1f77bcf86cd799439030', Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
+                  directriz: 'Volar hacia el norte',
+                  datetime: '2024-01-15T10:30:00Z',
+                },
+              },
+            },
+          },
+          404: { description: 'Instrucción no encontrada' },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+      put: {
+        tags: ['Instruccion'],
+        summary: 'Update a instruccion',
+        description: 'Crea una nueva instrucción como nueva versión de la existente (inmutabilidad por versiones). El campo `version` se incrementa automáticamente y se actualiza el contador `numVersiones` del vuelo',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/InstruccionUpdateBody' },
+              example: {
+                Punto: { Latitud: -47.0, Longitud: -5.0, Altitud: 20.0, Heading: 180.0 },
+                directriz: 'Volar hacia el sur',
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Nueva versión de la instrucción creada exitosamente',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Instruccion' },
+                example: {
+                  _id: '507f1f77bcf86cd799439099',
+                  ID_Vuelo: '507f1f77bcf86cd799439020',
+                  version: 2,
+                  trail: 1,
+                  Punto: { _id: '507f1f77bcf86cd799439031', Latitud: -47.0, Longitud: -5.0, Altitud: 20.0, Heading: 180.0 },
+                  directriz: 'Volar hacia el sur',
+                  datetime: '2024-01-16T14:45:00Z',
+                },
+              },
+            },
+          },
+          404: { description: 'Instrucción no encontrada' },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+      delete: {
+        tags: ['Instruccion'],
+        summary: 'Delete a instruccion',
+        description: 'Elimina una instrucción y su punto GPS asociado',
+        responses: {
+          200: {
+            description: 'Instrucción eliminada exitosamente',
+            content: {
+              'application/json': {
+                schema: { type: 'object', properties: { message: { type: 'string' } } },
+                example: { message: 'Instruccion deleted successfully' },
+              },
+            },
+          },
+          404: { description: 'Instrucción no encontrada' },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+    },
+    '/instrucciones': {
+      post: {
+        tags: ['Instruccion'],
+        summary: 'Create multiple instrucciones',
+        description: 'Crea varias instrucciones en una sola operación. Los valores de `trail` deben ser secuenciales empezando en 1. Se procesan en orden de trail',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { type: 'array', items: { $ref: '#/components/schemas/InstruccionInput' } },
+              example: [
+                {
+                  ID_Vuelo: '507f1f77bcf86cd799439020',
+                  trail: 1,
+                  Punto: { Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
+                  directriz: 'Despegar',
+                },
+                {
+                  ID_Vuelo: '507f1f77bcf86cd799439020',
+                  trail: 2,
+                  Punto: { Latitud: -46.080, Longitud: -4.040, Altitud: 30.0, Heading: 90.0 },
+                  directriz: 'Avanzar al norte',
+                },
+              ],
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Instrucciones creadas exitosamente',
+            content: {
+              'application/json': {
+                schema: { type: 'array', items: { $ref: '#/components/schemas/Instruccion' } },
+              },
+            },
+          },
+          400: { description: 'Secuencia de trail inválida' },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+      put: {
+        tags: ['Instruccion'],
+        summary: 'Update multiple instrucciones',
+        description: 'Actualiza varias instrucciones en una sola operación creando nuevas versiones de cada una. Los trails de las instrucciones deben ser consecutivos. Todas las instrucciones actualizadas comparten el mismo número de versión incrementado',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { type: 'array', items: { $ref: '#/components/schemas/InstruccionBulkUpdate' } },
+              example: [
+                {
+                  _id: '507f1f77bcf86cd799439011',
+                  Punto: { Latitud: -47.0, Longitud: -5.0, Altitud: 20.0, Heading: 180.0 },
+                  directriz: 'Volar hacia el sur',
+                },
+                {
+                  _id: '507f1f77bcf86cd799439012',
+                  directriz: 'Aterrizar',
+                },
+              ],
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Instrucciones actualizadas exitosamente',
+            content: {
+              'application/json': {
+                schema: { type: 'array', items: { $ref: '#/components/schemas/Instruccion' } },
+              },
+            },
+          },
+          400: { description: 'Instrucción no encontrada o secuencia de trail inválida' },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+    },
     '/puntos': {
       put: {
         tags: ['Punto'],
@@ -466,6 +737,49 @@ const openApiSpec = {
           Longitud: { type: 'number', example: -4.034 },
           Altitud: { type: 'number', example: 17.0 },
           Heading: { type: 'number', example: 170.4 },
+        },
+      },
+      Instruccion: {
+        type: 'object',
+        description: 'Instrucción de vuelo con su punto GPS populado',
+        required: ['_id', 'ID_Vuelo', 'version', 'trail', 'Punto', 'directriz', 'datetime'],
+        properties: {
+          _id: { type: 'string', description: 'ID único de la instrucción', example: '507f1f77bcf86cd799439011' },
+          ID_Vuelo: { type: 'string', description: 'ID del vuelo al que pertenece la instrucción', example: '507f1f77bcf86cd799439020' },
+          version: { type: 'integer', description: 'Versión de la instrucción (se incrementa en cada actualización)', example: 1 },
+          trail: { type: 'integer', description: 'Número de orden de la instrucción dentro del vuelo', example: 1 },
+          Punto: { $ref: '#/components/schemas/Punto' },
+          directriz: { type: 'string', description: 'Texto de la instrucción de vuelo', example: 'Volar hacia el norte' },
+          datetime: { type: 'string', format: 'date-time', description: 'Fecha y hora de creación en formato ISO 8601', example: '2024-01-15T10:30:00Z' },
+        },
+      },
+      InstruccionInput: {
+        type: 'object',
+        description: 'Datos para crear una instrucción de vuelo. El Punto se proporciona como objeto completo y se crea automáticamente. El trail se asigna automáticamente si no se indica',
+        required: ['ID_Vuelo', 'Punto', 'directriz'],
+        properties: {
+          ID_Vuelo: { type: 'string', description: 'ID del vuelo al que pertenece la instrucción', example: '507f1f77bcf86cd799439020' },
+          trail: { type: 'integer', description: 'Número de orden de la instrucción (se asigna automáticamente si no se indica)', example: 1 },
+          Punto: { $ref: '#/components/schemas/PuntoInput' },
+          directriz: { type: 'string', description: 'Texto de la instrucción de vuelo', example: 'Volar hacia el norte' },
+        },
+      },
+      InstruccionUpdateBody: {
+        type: 'object',
+        description: 'Datos opcionales para actualizar una instrucción. Genera una nueva versión inmutable conservando el trail y el vuelo originales',
+        properties: {
+          Punto: { $ref: '#/components/schemas/PuntoInput' },
+          directriz: { type: 'string', description: 'Nuevo texto de la instrucción', example: 'Volar hacia el sur' },
+        },
+      },
+      InstruccionBulkUpdate: {
+        type: 'object',
+        description: 'Datos para actualizar una instrucción dentro de una operación masiva (requiere _id)',
+        required: ['_id'],
+        properties: {
+          _id: { type: 'string', description: 'ID de la instrucción a actualizar', example: '507f1f77bcf86cd799439011' },
+          Punto: { $ref: '#/components/schemas/PuntoInput' },
+          directriz: { type: 'string', description: 'Nuevo texto de la instrucción', example: 'Volar hacia el sur' },
         },
       },
       PuntoUpdate: {
