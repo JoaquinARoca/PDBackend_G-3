@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import vueloRoutes from "./routes/vuelo.js";
 import puntoRoutes from "./routes/punto.js"
 import instruccionRoutes from "./routes/instruccion.js"
+import mediaRoutes from "./routes/media.js"
 import openApiSpec from "./openapi.js";
 
 
@@ -44,12 +45,13 @@ app.get('/docs', (_req, res) => {
 app.use("/api",vueloRoutes);
 app.use("/api",puntoRoutes);
 app.use("/api",instruccionRoutes);
+app.use("/api",mediaRoutes);
 
 //Rutas de prueba
-app.get("/", (req,res) => {
+app.get("/", (_req,res) => {
   res.send(("welcome to the PD G3 Backend!"));
 })
-app.post("/", (req,res) => {
+app.post("/", (_req,res) => {
   res.send(("good post to the PD G3 Backend!"));
 })
 

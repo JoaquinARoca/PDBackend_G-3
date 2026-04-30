@@ -26,18 +26,36 @@ const getLastInstruccionByVuelo = async (idVuelo: mongoose.Types.ObjectId) => {
     return await Instruccion.findOne({ ID_Vuelo: idVuelo }).sort({ datetime: -1 }).populate('Punto');
 };
 
+const buscarPuntoExistente = async (idVuelo: mongoose.Types.ObjectId, campos: IPunto): Promise<mongoose.Types.ObjectId | null> => {
+    const instrucciones = await Instruccion.find({ ID_Vuelo: idVuelo }).populate('Punto');
+    for (const instr of instrucciones) {
+        const p = instr.Punto as unknown as IPunto & { _id: mongoose.Types.ObjectId };
+        if (p &&
+            Number(p.Latitud) === Number(campos.Latitud) &&
+            Number(p.Longitud) === Number(campos.Longitud) &&
+            Number(p.Altitud) === Number(campos.Altitud) &&
+            Number(p.Heading) === Number(campos.Heading)
+        ) return p._id;
+    }
+    return null;
+};
+
 const updateInstruccion = async (id: string, data: Partial<InstruccionInput>, versionOverride?: number) => {
     const { ID_Vuelo, trail, Punto: puntoData, _id, ...rest } = data;
     const instruccion = await Instruccion.findById(id);
     if (!instruccion) return null;
     const ultima = await getLastInstruccionByVuelo(instruccion.ID_Vuelo);
     const version = versionOverride ?? (ultima ? (ultima.version as number) + 1 : 1);
-    const { _id: _ignoredId, ...puntoSinId } = puntoData ?? {};
-    const punto = await new Punto(puntoData ? puntoSinId : instruccion.Punto).save();
+    let puntoId = instruccion.Punto;
+    if (puntoData) {
+        const { _id: _ignoredId, ...campos } = puntoData;
+        const existente = await buscarPuntoExistente(instruccion.ID_Vuelo, campos);
+        puntoId = existente ?? (await new Punto(campos).save())._id;
+    }
     const nuevaInstruccion = new Instruccion({
         ID_Vuelo: instruccion.ID_Vuelo,
         ...rest,
-        Punto: punto._id,
+        Punto: puntoId,
         trail: instruccion.trail,
         version,
         datetime: new Date()

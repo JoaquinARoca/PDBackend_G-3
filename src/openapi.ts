@@ -561,7 +561,7 @@ const openApiSpec = {
       post: {
         tags: ['Instruccion'],
         summary: 'Create multiple instrucciones',
-        description: 'Crea varias instrucciones en una sola operación. Los valores de `trail` deben ser secuenciales empezando en 1. Se procesan en orden de trail',
+        description: 'Crea varias instrucciones en una sola operación. El campo `trail` es obligatorio en este endpoint y los valores deben ser secuenciales empezando en 1 (el vuelo no debe tener instrucciones previas). Se procesan en orden de trail',
         requestBody: {
           required: true,
           content: {
@@ -593,8 +593,7 @@ const openApiSpec = {
               },
             },
           },
-          400: { description: 'Secuencia de trail inválida' },
-          500: { description: 'Error interno del servidor' },
+          500: { description: 'Error interno del servidor o secuencia de trail inválida' },
         },
       },
       put: {
@@ -629,8 +628,7 @@ const openApiSpec = {
               },
             },
           },
-          400: { description: 'Instrucción no encontrada o secuencia de trail inválida' },
-          500: { description: 'Error interno del servidor' },
+          500: { description: 'Error interno del servidor, instrucción no encontrada o secuencia de trail inválida' },
         },
       },
     },
@@ -755,11 +753,11 @@ const openApiSpec = {
       },
       InstruccionInput: {
         type: 'object',
-        description: 'Datos para crear una instrucción de vuelo. El Punto se proporciona como objeto completo y se crea automáticamente. El trail se asigna automáticamente si no se indica',
+        description: 'Datos para crear una instrucción de vuelo. El Punto se proporciona como objeto completo y se crea automáticamente. En creación individual (POST /instruccion), el trail se asigna siempre de forma automática (el valor proporcionado se ignora). En creación masiva (POST /instrucciones), el campo trail es obligatorio, debe empezar en 1 y ser secuencial',
         required: ['ID_Vuelo', 'Punto', 'directriz'],
         properties: {
           ID_Vuelo: { type: 'string', description: 'ID del vuelo al que pertenece la instrucción', example: '507f1f77bcf86cd799439020' },
-          trail: { type: 'integer', description: 'Número de orden de la instrucción (se asigna automáticamente si no se indica)', example: 1 },
+          trail: { type: 'integer', description: 'Número de orden de la instrucción. Ignorado en creación individual (siempre auto-asignado). Obligatorio y secuencial desde 1 en creación masiva', example: 1 },
           Punto: { $ref: '#/components/schemas/PuntoInput' },
           directriz: { type: 'string', description: 'Texto de la instrucción de vuelo', example: 'Volar hacia el norte' },
         },
