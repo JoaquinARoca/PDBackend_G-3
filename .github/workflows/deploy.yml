@@ -33,23 +33,5 @@ jobs:
           push: true
           tags: ${{ env.IMAGE }}
 
-      - name: Deploy to server via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: IMAGE
-          script: |
-            docker pull $IMAGE
-            docker stop pdbackend-g3 || true
-            docker rm pdbackend-g3 || true
-            docker run -d \
-              --name pdbackend-g3 \
-              --restart unless-stopped \
-              -p 8103:8103 \
-              -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
-              -e CLOUDINARY_CLOUD_NAME="${{ secrets.CLOUDINARY_CLOUD_NAME }}" \
-              -e CLOUDINARY_API_KEY="${{ secrets.CLOUDINARY_API_KEY }}" \
-              -e CLOUDINARY_API_SECRET="${{ secrets.CLOUDINARY_API_SECRET }}" \
-              $IMAGE
+      - name: Notify image ready
+        run: echo "Image pushed to ${{ env.IMAGE }} - deploy manually on the server"
