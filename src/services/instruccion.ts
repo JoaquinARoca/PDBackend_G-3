@@ -40,7 +40,7 @@ const buscarPuntoExistente = async (idVuelo: mongoose.Types.ObjectId, campos: IP
     return null;
 };
 
-const updateInstruccion = async (id: string, data: Partial<InstruccionInput>, versionOverride?: number) => {
+const updateInstruccion = async (id: string, data: Partial<InstruccionInput>, versionOverride?: number, skipVueloUpdate = false) => {
     const { ID_Vuelo, trail, Punto: puntoData, _id, ...rest } = data;
     const instruccion = await Instruccion.findById(id);
     if (!instruccion) return null;
@@ -61,8 +61,10 @@ const updateInstruccion = async (id: string, data: Partial<InstruccionInput>, ve
         datetime: new Date()
     });
     const saved = await nuevaInstruccion.save();
-    await Vuelo.findByIdAndUpdate(instruccion.ID_Vuelo, { $inc: { numVersiones: 1 } });
-    return await Instruccion.findById(saved._id).populate('Punto');
+    const instruccionActualizada = await Instruccion.findById(saved._id).populate('Punto');
+    if (instruccionActualizada && !skipVueloUpdate)
+        await Vuelo.findByIdAndUpdate(instruccion.ID_Vuelo, { $inc: { numVersiones: 1 } });
+    return instruccionActualizada;
 };
 
 const deleteInstruccion = async (id: string) => {
@@ -104,7 +106,7 @@ const updateInstrucciones = async (data: (Partial<InstruccionInput> & { _id: str
     const results = [];
     for (const { input } of sorted) {
         const { _id, ...rest } = input;
-        results.push(await updateInstruccion(_id, rest, version));
+        results.push(await updateInstruccion(_id, rest, version, true));
     }
     const vueloIds = [...new Set(sorted.map(({ doc }) => doc.ID_Vuelo.toString()))];
     await Promise.all(vueloIds.map(id => Vuelo.findByIdAndUpdate(id, { $inc: { numVersiones: 1 } })));

@@ -104,7 +104,7 @@ const openApiSpec = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/VueloInput' },
+              schema: { $ref: '#/components/schemas/_VueloInput' },
               example: {
                 nametag: 'DroneLab1234',
               },
@@ -176,7 +176,7 @@ const openApiSpec = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/VueloInput' },
+              schema: { $ref: '#/components/schemas/_VueloInput' },
               example: {
                 nametag: 'DroneLab1235',
               },
@@ -280,7 +280,7 @@ const openApiSpec = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/PuntoInput' },
+              schema: { $ref: '#/components/schemas/_PuntoInput' },
               example: { Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
             },
           },
@@ -335,7 +335,7 @@ const openApiSpec = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/PuntoInput' },
+              schema: { $ref: '#/components/schemas/_PuntoInput' },
               example: { Latitud: -47.0, Longitud: -5.0, Altitud: 20.0, Heading: 180.0 },
             },
           },
@@ -436,7 +436,7 @@ const openApiSpec = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/InstruccionInput' },
+              schema: { $ref: '#/components/schemas/_InstruccionInput' },
               example: {
                 ID_Vuelo: '507f1f77bcf86cd799439020',
                 Punto: { Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
@@ -512,7 +512,7 @@ const openApiSpec = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/InstruccionUpdateBody' },
+              schema: { $ref: '#/components/schemas/_InstruccionUpdateBody' },
               example: {
                 Punto: { Latitud: -47.0, Longitud: -5.0, Altitud: 20.0, Heading: 180.0 },
                 directriz: 'Volar hacia el sur',
@@ -570,7 +570,7 @@ const openApiSpec = {
           required: true,
           content: {
             'application/json': {
-              schema: { type: 'array', items: { $ref: '#/components/schemas/InstruccionInput' } },
+              schema: { type: 'array', items: { $ref: '#/components/schemas/_InstruccionInput' } },
               example: [
                 {
                   ID_Vuelo: '507f1f77bcf86cd799439020',
@@ -608,7 +608,7 @@ const openApiSpec = {
           required: true,
           content: {
             'application/json': {
-              schema: { type: 'array', items: { $ref: '#/components/schemas/InstruccionBulkUpdate' } },
+              schema: { type: 'array', items: { $ref: '#/components/schemas/_InstruccionBulkUpdate' } },
               example: [
                 {
                   _id: '507f1f77bcf86cd799439011',
@@ -756,7 +756,7 @@ const openApiSpec = {
             'application/json': {
               schema: {
                 type: 'array',
-                items: { $ref: '#/components/schemas/PuntoUpdate' },
+                items: { $ref: '#/components/schemas/_PuntoUpdate' },
               },
               example: [
                 { _id: '507f1f77bcf86cd799439011', Latitud: -47.0, Longitud: -5.0 },
@@ -807,7 +807,46 @@ const openApiSpec = {
           },
         },
       },
-      VueloInput: {
+      Punto: {
+        type: 'object',
+        description: 'Coordenada GPS con altitud y orientación del dron',
+        required: ['id', 'Latitud', 'Longitud', 'Altitud', 'Heading'],
+        properties: {
+          id: { type: 'string', description: 'ID único del punto', example: '507f1f77bcf86cd799439011' },
+          Latitud: { type: 'number', description: 'Latitud en grados decimales', example: -46.075 },
+          Longitud: { type: 'number', description: 'Longitud en grados decimales', example: -4.034 },
+          Altitud: { type: 'number', description: 'Altitud en metros', example: 17.0 },
+          Heading: { type: 'number', description: 'Orientación en grados (0-360)', example: 170.4 },
+        },
+      },
+      Instruccion: {
+        type: 'object',
+        description: 'Instrucción de vuelo con su punto GPS populado',
+        required: ['_id', 'ID_Vuelo', 'version', 'trail', 'Punto', 'directriz', 'datetime'],
+        properties: {
+          _id: { type: 'string', description: 'ID único de la instrucción', example: '507f1f77bcf86cd799439011' },
+          ID_Vuelo: { type: 'string', description: 'ID del vuelo al que pertenece la instrucción', example: '507f1f77bcf86cd799439020' },
+          version: { type: 'integer', description: 'Versión de la instrucción (se incrementa en cada actualización)', example: 1 },
+          trail: { type: 'integer', description: 'Número de orden de la instrucción dentro del vuelo', example: 1 },
+          Punto: { $ref: '#/components/schemas/Punto' },
+          directriz: { type: 'string', description: 'Texto de la instrucción de vuelo', example: 'Volar hacia el norte' },
+          datetime: { type: 'string', format: 'date-time', description: 'Fecha y hora de creación en formato ISO 8601', example: '2024-01-15T10:30:00Z' },
+        },
+      },
+      Media: {
+        type: 'object',
+        description: 'Archivo multimedia (imagen o vídeo) almacenado en Cloudinary y asociado a una instrucción',
+        required: ['_id', 'url', 'publicId', 'type', 'instruccionId', 'createdAt'],
+        properties: {
+          _id: { type: 'string', description: 'ID único del documento en MongoDB', example: '507f1f77bcf86cd799439050' },
+          url: { type: 'string', format: 'uri', description: 'URL pública del archivo en Cloudinary', example: 'https://res.cloudinary.com/demo/video/upload/pd-g3/abc123.mp4' },
+          publicId: { type: 'string', description: 'Identificador del archivo en Cloudinary (necesario para borrarlo)', example: 'pd-g3/abc123' },
+          type: { type: 'string', enum: ['image', 'video'], description: 'Tipo de archivo', example: 'video' },
+          instruccionId: { type: 'string', description: 'ID de la instrucción a la que pertenece el archivo', example: '507f1f77bcf86cd799439011' },
+          createdAt: { type: 'string', format: 'date-time', description: 'Fecha y hora de subida', example: '2024-01-15T10:30:00Z' },
+        },
+      },
+      _VueloInput: {
         type: 'object',
         description: 'Datos necesarios para crear o actualizar un vuelo',
         required: ['nametag'],
@@ -827,19 +866,7 @@ const openApiSpec = {
           },
         },
       },
-      Punto: {
-        type: 'object',
-        description: 'Coordenada GPS con altitud y orientación del dron',
-        required: ['id', 'Latitud', 'Longitud', 'Altitud', 'Heading'],
-        properties: {
-          id: { type: 'string', description: 'ID único del punto', example: '507f1f77bcf86cd799439011' },
-          Latitud: { type: 'number', description: 'Latitud en grados decimales', example: -46.075 },
-          Longitud: { type: 'number', description: 'Longitud en grados decimales', example: -4.034 },
-          Altitud: { type: 'number', description: 'Altitud en metros', example: 17.0 },
-          Heading: { type: 'number', description: 'Orientación en grados (0-360)', example: 170.4 },
-        },
-      },
-      PuntoInput: {
+      _PuntoInput: {
         type: 'object',
         description: 'Datos para crear o actualizar un punto GPS',
         required: ['Latitud', 'Longitud', 'Altitud', 'Heading'],
@@ -850,63 +877,36 @@ const openApiSpec = {
           Heading: { type: 'number', example: 170.4 },
         },
       },
-      Instruccion: {
-        type: 'object',
-        description: 'Instrucción de vuelo con su punto GPS populado',
-        required: ['_id', 'ID_Vuelo', 'version', 'trail', 'Punto', 'directriz', 'datetime'],
-        properties: {
-          _id: { type: 'string', description: 'ID único de la instrucción', example: '507f1f77bcf86cd799439011' },
-          ID_Vuelo: { type: 'string', description: 'ID del vuelo al que pertenece la instrucción', example: '507f1f77bcf86cd799439020' },
-          version: { type: 'integer', description: 'Versión de la instrucción (se incrementa en cada actualización)', example: 1 },
-          trail: { type: 'integer', description: 'Número de orden de la instrucción dentro del vuelo', example: 1 },
-          Punto: { $ref: '#/components/schemas/Punto' },
-          directriz: { type: 'string', description: 'Texto de la instrucción de vuelo', example: 'Volar hacia el norte' },
-          datetime: { type: 'string', format: 'date-time', description: 'Fecha y hora de creación en formato ISO 8601', example: '2024-01-15T10:30:00Z' },
-        },
-      },
-      InstruccionInput: {
+      _InstruccionInput: {
         type: 'object',
         description: 'Datos para crear una instrucción de vuelo. El Punto se proporciona como objeto completo y se crea automáticamente. En creación individual (POST /instruccion), el trail se asigna siempre de forma automática (el valor proporcionado se ignora). En creación masiva (POST /instrucciones), el campo trail es obligatorio, debe empezar en 1 y ser secuencial',
         required: ['ID_Vuelo', 'Punto', 'directriz'],
         properties: {
           ID_Vuelo: { type: 'string', description: 'ID del vuelo al que pertenece la instrucción', example: '507f1f77bcf86cd799439020' },
           trail: { type: 'integer', description: 'Número de orden de la instrucción. Ignorado en creación individual (siempre auto-asignado). Obligatorio y secuencial desde 1 en creación masiva', example: 1 },
-          Punto: { $ref: '#/components/schemas/PuntoInput' },
+          Punto: { $ref: '#/components/schemas/_PuntoInput' },
           directriz: { type: 'string', description: 'Texto de la instrucción de vuelo', example: 'Volar hacia el norte' },
         },
       },
-      InstruccionUpdateBody: {
+      _InstruccionUpdateBody: {
         type: 'object',
         description: 'Datos opcionales para actualizar una instrucción. Genera una nueva versión inmutable conservando el trail y el vuelo originales',
         properties: {
-          Punto: { $ref: '#/components/schemas/PuntoInput' },
+          Punto: { $ref: '#/components/schemas/_PuntoInput' },
           directriz: { type: 'string', description: 'Nuevo texto de la instrucción', example: 'Volar hacia el sur' },
         },
       },
-      InstruccionBulkUpdate: {
+      _InstruccionBulkUpdate: {
         type: 'object',
         description: 'Datos para actualizar una instrucción dentro de una operación masiva (requiere _id)',
         required: ['_id'],
         properties: {
           _id: { type: 'string', description: 'ID de la instrucción a actualizar', example: '507f1f77bcf86cd799439011' },
-          Punto: { $ref: '#/components/schemas/PuntoInput' },
+          Punto: { $ref: '#/components/schemas/_PuntoInput' },
           directriz: { type: 'string', description: 'Nuevo texto de la instrucción', example: 'Volar hacia el sur' },
         },
       },
-      Media: {
-        type: 'object',
-        description: 'Archivo multimedia (imagen o vídeo) almacenado en Cloudinary y asociado a una instrucción',
-        required: ['_id', 'url', 'publicId', 'type', 'instruccionId', 'createdAt'],
-        properties: {
-          _id: { type: 'string', description: 'ID único del documento en MongoDB', example: '507f1f77bcf86cd799439050' },
-          url: { type: 'string', format: 'uri', description: 'URL pública del archivo en Cloudinary', example: 'https://res.cloudinary.com/demo/video/upload/pd-g3/abc123.mp4' },
-          publicId: { type: 'string', description: 'Identificador del archivo en Cloudinary (necesario para borrarlo)', example: 'pd-g3/abc123' },
-          type: { type: 'string', enum: ['image', 'video'], description: 'Tipo de archivo', example: 'video' },
-          instruccionId: { type: 'string', description: 'ID de la instrucción a la que pertenece el archivo', example: '507f1f77bcf86cd799439011' },
-          createdAt: { type: 'string', format: 'date-time', description: 'Fecha y hora de subida', example: '2024-01-15T10:30:00Z' },
-        },
-      },
-      PuntoUpdate: {
+      _PuntoUpdate: {
         type: 'object',
         description: 'Datos para actualizar un punto existente (requiere _id)',
         required: ['_id'],

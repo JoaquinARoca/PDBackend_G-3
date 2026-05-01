@@ -15,8 +15,7 @@ const getVueloById = async(id: string) => {
 };
 
 const updateVuelo = async(id: string, updateData: Partial<IVuelo>) => {
-    // return await Vuelo.updateOne({ _id: id }, { $set: { ...updateData, datetime: new Date() } });
-    return await Vuelo.updateOne({ _id: id }, { $set: { ...updateData} });
+    return await Vuelo.findByIdAndUpdate(id, { $set: updateData }, { returnDocument: 'after' });
 }
 
 const deleteVuelo = async(id: string) => {
