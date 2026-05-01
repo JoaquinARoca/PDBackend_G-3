@@ -11,7 +11,7 @@ import openApiSpec from "./openapi.js";
 dotenv.config({ quiet: true });
 
 const app = express();
-const port = Number(process.env.PORT) || 8103;
+const port = Number(process.env.PORT) || 8104;
 
 app.use(express.json());
 
