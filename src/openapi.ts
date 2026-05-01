@@ -28,6 +28,10 @@ const openApiSpec = {
       name: 'Instruccion',
       description: 'Instruccion es un modelo de datos que representa una orden de vuelo asociada a un punto GPS y un vuelo. Cada instrucción genera un nuevo trail y puede crear nuevas versiones al ser actualizada',
     },
+    {
+      name: 'Media',
+      description: 'Media es un modelo de datos que representa un archivo multimedia (imagen o vídeo) subido a Cloudinary y asociado a una instrucción de vuelo',
+    },
   ],
   paths: {
     '/vuelo': {
@@ -632,6 +636,115 @@ const openApiSpec = {
         },
       },
     },
+    '/media': {
+      post: {
+        tags: ['Media'],
+        summary: 'Upload media',
+        description: 'Sube un archivo de imagen o vídeo a Cloudinary y lo asocia a una instrucción de vuelo',
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': {
+              schema: {
+                type: 'object',
+                required: ['file', 'instruccionId'],
+                properties: {
+                  file: { type: 'string', format: 'binary', description: 'Archivo de imagen o vídeo' },
+                  instruccionId: { type: 'string', description: 'ID de la instrucción a la que pertenece el archivo', example: '507f1f77bcf86cd799439011' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Archivo subido y guardado exitosamente',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Media' },
+                example: {
+                  _id: '507f1f77bcf86cd799439050',
+                  url: 'https://res.cloudinary.com/demo/video/upload/pd-g3/abc123.mp4',
+                  publicId: 'pd-g3/abc123',
+                  type: 'video',
+                  instruccionId: '507f1f77bcf86cd799439011',
+                  createdAt: '2024-01-15T10:30:00Z',
+                },
+              },
+            },
+          },
+          400: { description: 'No se proporcionó archivo o instruccionId inválido' },
+          500: { description: 'Error interno del servidor o fallo al subir a Cloudinary' },
+        },
+      },
+    },
+    '/media/{instruccionId}': {
+      parameters: [
+        {
+          name: 'instruccionId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: 'ID de la instrucción',
+          example: '507f1f77bcf86cd799439011',
+        },
+      ],
+      get: {
+        tags: ['Media'],
+        summary: 'Get media by instruccion',
+        description: 'Obtiene todos los archivos multimedia asociados a una instrucción, ordenados por fecha de creación descendente',
+        responses: {
+          200: {
+            description: 'Lista de archivos multimedia',
+            content: {
+              'application/json': {
+                schema: { type: 'array', items: { $ref: '#/components/schemas/Media' } },
+                example: [
+                  {
+                    _id: '507f1f77bcf86cd799439050',
+                    url: 'https://res.cloudinary.com/demo/video/upload/pd-g3/abc123.mp4',
+                    publicId: 'pd-g3/abc123',
+                    type: 'video',
+                    instruccionId: '507f1f77bcf86cd799439011',
+                    createdAt: '2024-01-15T10:30:00Z',
+                  },
+                ],
+              },
+            },
+          },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+    },
+    '/media/{publicId}': {
+      parameters: [
+        {
+          name: 'publicId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: 'Public ID del archivo en Cloudinary (la "/" debe codificarse como %2F)',
+          example: 'pd-g3%2Fabc123',
+        },
+      ],
+      delete: {
+        tags: ['Media'],
+        summary: 'Delete media',
+        description: 'Elimina un archivo de Cloudinary y su registro en MongoDB. El publicId tiene formato `pd-g3/nombre`, donde la barra debe ir codificada como `%2F` en la URL',
+        responses: {
+          200: {
+            description: 'Archivo eliminado exitosamente',
+            content: {
+              'application/json': {
+                schema: { type: 'object', properties: { message: { type: 'string' } } },
+                example: { message: 'Deleted successfully' },
+              },
+            },
+          },
+          500: { description: 'Error al eliminar de Cloudinary o de la base de datos' },
+        },
+      },
+    },
     '/puntos': {
       put: {
         tags: ['Punto'],
@@ -778,6 +891,19 @@ const openApiSpec = {
           _id: { type: 'string', description: 'ID de la instrucción a actualizar', example: '507f1f77bcf86cd799439011' },
           Punto: { $ref: '#/components/schemas/PuntoInput' },
           directriz: { type: 'string', description: 'Nuevo texto de la instrucción', example: 'Volar hacia el sur' },
+        },
+      },
+      Media: {
+        type: 'object',
+        description: 'Archivo multimedia (imagen o vídeo) almacenado en Cloudinary y asociado a una instrucción',
+        required: ['_id', 'url', 'publicId', 'type', 'instruccionId', 'createdAt'],
+        properties: {
+          _id: { type: 'string', description: 'ID único del documento en MongoDB', example: '507f1f77bcf86cd799439050' },
+          url: { type: 'string', format: 'uri', description: 'URL pública del archivo en Cloudinary', example: 'https://res.cloudinary.com/demo/video/upload/pd-g3/abc123.mp4' },
+          publicId: { type: 'string', description: 'Identificador del archivo en Cloudinary (necesario para borrarlo)', example: 'pd-g3/abc123' },
+          type: { type: 'string', enum: ['image', 'video'], description: 'Tipo de archivo', example: 'video' },
+          instruccionId: { type: 'string', description: 'ID de la instrucción a la que pertenece el archivo', example: '507f1f77bcf86cd799439011' },
+          createdAt: { type: 'string', format: 'date-time', description: 'Fecha y hora de subida', example: '2024-01-15T10:30:00Z' },
         },
       },
       PuntoUpdate: {
