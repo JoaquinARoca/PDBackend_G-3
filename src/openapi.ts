@@ -467,6 +467,96 @@ const openApiSpec = {
         },
       },
     },
+    '/instruccion/vuelo': {
+      get: {
+        tags: ['Instruccion'],
+        summary: 'Get instruccion by vuelo and version (query)',
+        description: 'Obtiene la instrucción correspondiente a un vuelo y versión específicos usando query params. Si no se indica `version`, se usa 1 por defecto',
+        parameters: [
+          {
+            name: 'ID_Vuelo',
+            in: 'query',
+            required: true,
+            schema: { type: 'string' },
+            description: 'ID del vuelo',
+            example: '507f1f77bcf86cd799439020',
+          },
+          {
+            name: 'version',
+            in: 'query',
+            required: false,
+            schema: { type: 'integer', minimum: 1, default: 1 },
+            description: 'Versión de la instrucción (por defecto 1)',
+            example: 1,
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Instrucción encontrada',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Instruccion' },
+                example: {
+                  _id: '507f1f77bcf86cd799439011',
+                  ID_Vuelo: '507f1f77bcf86cd799439020',
+                  version: 1,
+                  trail: 1,
+                  Punto: { _id: '507f1f77bcf86cd799439030', Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
+                  directriz: 'Volar hacia el norte',
+                  datetime: '2024-01-15T10:30:00Z',
+                },
+              },
+            },
+          },
+          400: { description: 'ID_Vuelo es requerido' },
+          404: { description: 'Instrucción no encontrada' },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+      post: {
+        tags: ['Instruccion'],
+        summary: 'Get instruccion by vuelo and version (body)',
+        description: 'Obtiene la instrucción correspondiente a un vuelo y versión específicos usando body JSON. Si no se indica `version`, se usa 1 por defecto',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['ID_Vuelo'],
+                properties: {
+                  ID_Vuelo: { type: 'string', description: 'ID del vuelo', example: '507f1f77bcf86cd799439020' },
+                  version: { type: 'integer', minimum: 1, default: 1, description: 'Versión de la instrucción (por defecto 1)', example: 1 },
+                },
+              },
+              example: { ID_Vuelo: '507f1f77bcf86cd799439020', version: 2 },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Instrucción encontrada',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Instruccion' },
+                example: {
+                  _id: '507f1f77bcf86cd799439011',
+                  ID_Vuelo: '507f1f77bcf86cd799439020',
+                  version: 2,
+                  trail: 1,
+                  Punto: { _id: '507f1f77bcf86cd799439030', Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
+                  directriz: 'Volar hacia el norte',
+                  datetime: '2024-01-15T10:30:00Z',
+                },
+              },
+            },
+          },
+          400: { description: 'ID_Vuelo es requerido' },
+          404: { description: 'Instrucción no encontrada' },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+    },
     '/instruccion/{id}': {
       parameters: [
         {
