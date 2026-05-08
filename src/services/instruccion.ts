@@ -91,28 +91,40 @@ const createInstrucciones = async (data: InstruccionInput[]) => {
     return results;
 };
 
-const updateInstrucciones = async (data: (Partial<InstruccionInput> & { _id: string })[]) => {
-    const existentes = await Promise.all(data.map(({ _id }) => Instruccion.findById(_id)));
-    for (const doc of existentes) {
-        if (!doc) throw new Error(`Instruccion no encontrada`);
-    }
-    const sorted = existentes
-        .map((doc, i) => ({ doc: doc!, input: data[i] }))
-        .sort((a, b) => (a.doc.trail as number) - (b.doc.trail as number));
-    const trails = sorted.map(({ doc }) => doc.trail as number);
-    for (let i = 0; i < trails.length; i++) {
-        if (trails[i] !== trails[0] + i) {
-            throw new Error(`Secuencia de trail inválida: se esperaba ${trails[0] + i}, se recibió ${trails[i]}`);
+const updateInstrucciones = async (data: (Partial<InstruccionInput> & { _id?: string })[]) => {
+    const sorted = [...data].sort((a, b) => (a.trail as number) - (b.trail as number));
+    for (let i = 0; i < sorted.length; i++) {
+        if ((sorted[i].trail as number) !== i + 1) {
+            throw new Error(`Secuencia de trail inválida: se esperaba ${i + 1}, se recibió ${sorted[i].trail}`);
         }
     }
-    const ultimaVersion = await getLastInstruccionByVuelo(sorted[0].doc.ID_Vuelo);
+    // Resolve each item: an _id seen for the first time and found in DB → existing; duplicate or not found → new
+    const seenIds = new Set<string>();
+    const resolved = await Promise.all(sorted.map(async (item) => {
+        if (item._id && !seenIds.has(item._id)) {
+            const doc = await Instruccion.findById(item._id);
+            if (doc) { seenIds.add(item._id); return { doc, item, isNew: false }; }
+        }
+        return { doc: null, item, isNew: true };
+    }));
+    const firstExisting = resolved.find(r => !r.isNew)?.doc;
+    const vueloId = firstExisting?.ID_Vuelo ?? (sorted[0].ID_Vuelo as mongoose.Types.ObjectId);
+    const ultimaVersion = await getLastInstruccionByVuelo(vueloId);
     const version = ultimaVersion ? (ultimaVersion.version as number) + 1 : 1;
     const results = [];
-    for (const { input } of sorted) {
-        const { _id, ...rest } = input;
-        results.push(await updateInstruccion(_id, rest, version, true));
+    for (const { doc, item, isNew } of resolved) {
+        if (!isNew && doc) {
+            const { _id, ...rest } = item;
+            results.push(await updateInstruccion(_id!, rest, version, true));
+        } else {
+            const { Punto: puntoData, _id: _ignored, ...rest } = item;
+            const punto = puntoData ? await new Punto(puntoData).save() : null;
+            const newInstr = new Instruccion({ ...rest, Punto: punto?._id, version, datetime: new Date() });
+            const saved = await newInstr.save();
+            results.push(await Instruccion.findById(saved._id).populate('Punto'));
+        }
     }
-    const vueloIds = [...new Set(sorted.map(({ doc }) => doc.ID_Vuelo.toString()))];
+    const vueloIds = [...new Set(sorted.map(d => (d.ID_Vuelo as mongoose.Types.ObjectId)?.toString()).filter(Boolean))];
     await Promise.all(vueloIds.map(id => Vuelo.findByIdAndUpdate(id, { $inc: { numVersiones: 1 } })));
     return results;
 };
