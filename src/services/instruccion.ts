@@ -9,6 +9,10 @@ const getInstruccionByVueloYVersion = async (idVuelo: mongoose.Types.ObjectId, v
     return await Instruccion.findOne({ ID_Vuelo: idVuelo, version }).populate('Punto');
 };
 
+const getInstruccionesByVueloYVersion = async (idVuelo: mongoose.Types.ObjectId, version: number) => {
+    return await Instruccion.find({ ID_Vuelo: idVuelo, version }).populate('Punto');
+};
+
 const createInstruccion = async (data: InstruccionInput) => {
     const lastTrail = await Instruccion.findOne({ ID_Vuelo: data.ID_Vuelo }).sort({ datetime: -1 });
     const trail = lastTrail ? (lastTrail.trail as number) + 1 : 1;
@@ -129,5 +133,5 @@ const updateInstrucciones = async (data: (Partial<InstruccionInput> & { _id?: st
     return results;
 };
 
-export { createInstruccion, createInstrucciones, getInstrucciones, getInstruccionById, getInstruccionByVueloYVersion, updateInstruccion, updateInstrucciones, deleteInstruccion };
+export { createInstruccion, createInstrucciones, getInstrucciones, getInstruccionById,getInstruccionesByVueloYVersion, getInstruccionByVueloYVersion, updateInstruccion, updateInstrucciones, deleteInstruccion };
 export type { InstruccionInput };

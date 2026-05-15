@@ -557,6 +557,64 @@ const openApiSpec = {
         },
       },
     },
+    '/instrucciones/vuelo': {
+      get: {
+        tags: ['Instruccion'],
+        summary: 'Get all instrucciones by vuelo and version',
+        description: 'Obtiene todas las instrucciones (todos los trails) de un vuelo y versión específicos. Equivalente a `/instruccion/vuelo` pero devuelve un array en lugar de una sola instrucción',
+        parameters: [
+          {
+            name: 'ID_Vuelo',
+            in: 'query',
+            required: true,
+            schema: { type: 'string' },
+            description: 'ID del vuelo',
+            example: '507f1f77bcf86cd799439020',
+          },
+          {
+            name: 'version',
+            in: 'query',
+            required: false,
+            schema: { type: 'integer', minimum: 1, default: 1 },
+            description: 'Versión de las instrucciones (por defecto 1)',
+            example: 1,
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Lista de instrucciones encontradas',
+            content: {
+              'application/json': {
+                schema: { type: 'array', items: { $ref: '#/components/schemas/Instruccion' } },
+                example: [
+                  {
+                    _id: '507f1f77bcf86cd799439011',
+                    ID_Vuelo: '507f1f77bcf86cd799439020',
+                    version: 1,
+                    trail: 1,
+                    Punto: { _id: '507f1f77bcf86cd799439030', Latitud: -46.075, Longitud: -4.034, Altitud: 17.0, Heading: 170.4 },
+                    directriz: 'Despegar',
+                    datetime: '2024-01-15T10:30:00Z',
+                  },
+                  {
+                    _id: '507f1f77bcf86cd799439012',
+                    ID_Vuelo: '507f1f77bcf86cd799439020',
+                    version: 1,
+                    trail: 2,
+                    Punto: { _id: '507f1f77bcf86cd799439031', Latitud: -46.080, Longitud: -4.040, Altitud: 30.0, Heading: 90.0 },
+                    directriz: 'Avanzar al norte',
+                    datetime: '2024-01-15T10:31:00Z',
+                  },
+                ],
+              },
+            },
+          },
+          400: { description: 'ID_Vuelo es requerido' },
+          404: { description: 'No se encontraron instrucciones para el vuelo y versión indicados' },
+          500: { description: 'Error interno del servidor' },
+        },
+      },
+    },
     '/instruccion/{id}': {
       parameters: [
         {

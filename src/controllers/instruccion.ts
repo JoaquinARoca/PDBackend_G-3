@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Request, Response } from "express";
-import { createInstruccion, createInstrucciones, getInstrucciones, getInstruccionById, getInstruccionByVueloYVersion, updateInstruccion, updateInstrucciones, deleteInstruccion } from "../services/instruccion.js";
+import { createInstruccion, createInstrucciones, getInstrucciones, getInstruccionById,getInstruccionesByVueloYVersion, getInstruccionByVueloYVersion, updateInstruccion, updateInstrucciones, deleteInstruccion } from "../services/instruccion.js";
 
 
 
@@ -54,6 +54,19 @@ const getInstruccionByVueloYVersionHandler = async (req: Request, res: Response)
     }
 };
 
+const getInstruccionesByVueloYVersionHandler = async (req: Request, res: Response) => {
+    try {
+        const idVuelo = req.query.ID_Vuelo ?? req.body?.ID_Vuelo;
+        const version = req.query.version ?? req.body?.version ?? 1;
+        if (!idVuelo) return res.status(400).json({ message: 'ID_Vuelo is required' });
+        const instrucciones = await getInstruccionesByVueloYVersion(new mongoose.Types.ObjectId(idVuelo as string), parseInt(version as string));
+        if (!instrucciones) return res.status(404).json({ message: 'Instrucciones not found' });
+        res.json(instrucciones);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching instrucciones', error: errMsg(error) });
+    }
+};
+
 const updateInstruccionHandler = async (req: Request, res: Response) => {
     try {
         const instruccion = await updateInstruccion(req.params.id as string, req.body);
@@ -92,4 +105,4 @@ const createInstruccionesHandler = async (req: Request, res: Response) => {
     }
 };
 
-export { createInstruccionHandler, createInstruccionesHandler, getInstruccionesHandler, getInstruccionByIdHandler, getInstruccionByVueloYVersionHandler, updateInstruccionHandler, updateInstruccionesHandler, deleteInstruccionHandler };
+export { createInstruccionHandler, createInstruccionesHandler, getInstruccionesHandler, getInstruccionByIdHandler,getInstruccionesByVueloYVersionHandler, getInstruccionByVueloYVersionHandler, updateInstruccionHandler, updateInstruccionesHandler, deleteInstruccionHandler };
