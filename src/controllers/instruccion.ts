@@ -60,7 +60,7 @@ const getInstruccionesByVueloYVersionHandler = async (req: Request, res: Respons
         const version = req.query.version ?? req.body?.version ?? 1;
         if (!idVuelo) return res.status(400).json({ message: 'ID_Vuelo is required' });
         const instrucciones = await getInstruccionesByVueloYVersion(new mongoose.Types.ObjectId(idVuelo as string), parseInt(version as string));
-        if (!instrucciones) return res.status(404).json({ message: 'Instrucciones not found' });
+        if (!instrucciones.length) return res.status(404).json({ message: 'Instrucciones not found' });
         res.json(instrucciones);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching instrucciones', error: errMsg(error) });
